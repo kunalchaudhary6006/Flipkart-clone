@@ -11,6 +11,7 @@ export default function Header() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [localToken, setLocalToken] = useState(localStorage.getItem('user_token'));
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   useEffect(() => {
     const handleStorage = () => setLocalToken(localStorage.getItem('user_token'));
@@ -74,9 +75,39 @@ export default function Header() {
           Become a Seller
         </button>
 
-        <button onClick={() => alert("More menu expanding!")} className="flex items-center gap-1 hover:text-gray-100 transition-colors shrink-0 cursor-pointer">
-          More <ChevronDown size={16} className="mt-1" />
-        </button>
+        <div 
+          className="relative h-full flex items-center"
+          onMouseEnter={() => setIsMoreOpen(true)}
+          onMouseLeave={() => setIsMoreOpen(false)}
+        >
+          <button 
+            onClick={() => setIsMoreOpen(!isMoreOpen)}
+            className="flex items-center gap-1 hover:text-gray-100 transition-colors shrink-0 cursor-pointer h-full pb-1"
+          >
+            More <ChevronDown size={16} className={`mt-1 transition-transform duration-200 ${isMoreOpen ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {isMoreOpen && (
+            <div className="absolute top-[48px] left-1/2 -translate-x-1/2 w-[200px] bg-white text-[#212121] shadow-[0_4px_16px_0_rgba(0,0,0,0.2)] rounded-[2px] flex flex-col py-2 border border-[#f0f0f0] z-[100]">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-x-8 border-b-8 border-x-transparent border-b-white"></div>
+              {[
+                'Grocery', 'Mobiles', 'Fashion', 'Electronics', 
+                'Home & Furniture', 'Appliances', 'Travel', 'Beauty, Toys & More'
+              ].map(cat => (
+                <button 
+                  key={cat}
+                  onClick={() => {
+                    setIsMoreOpen(false);
+                    navigate(`/?category=${encodeURIComponent(cat)}`);
+                  }}
+                  className="px-4 py-3 text-left hover:bg-[#f9f9f9] text-[14px] font-medium border-b border-[#f0f0f0] last:border-0"
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         
         <Link to="/checkout" className="flex items-center tracking-tight font-semibold gap-2 hover:text-gray-100 transition-colors">
           <div className="relative">
