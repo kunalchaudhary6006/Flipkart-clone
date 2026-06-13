@@ -36,9 +36,13 @@ export default function Login() {
     try {
       await login();
       navigate('/');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Failed to login with Google');
+      if (err.code === 'auth/unauthorized-domain') {
+        alert(`Deployment Domain Not Authorized in Firebase!\n\nPlease go to Firebase Console -> Authentication -> Settings -> Authorized Domains and add your Vercel domain (${window.location.hostname}).\n\nFor now, please use the OTP login mock above.`);
+      } else {
+        alert('Failed to login with Google: ' + (err.message || 'Unknown error'));
+      }
     } finally {
       setLoading(false);
     }

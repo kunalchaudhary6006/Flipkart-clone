@@ -79,8 +79,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           throw new Error(JSON.stringify(errInfo));
         }
       } else {
-        localStorage.removeItem('user_token');
-        localStorage.removeItem('user_name');
+        // Only remove if it's an actual firebase logout, or if it was a real firebase token
+        const currentToken = localStorage.getItem('user_token');
+        if (currentToken && !currentToken.includes('@') && currentToken.length > 15) {
+          localStorage.removeItem('user_token');
+          localStorage.removeItem('user_name');
+        }
         setUserData(null);
       }
       setLoading(false);
@@ -94,6 +98,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
+    localStorage.removeItem('user_token');
+    localStorage.removeItem('user_name');
+    window.dispatchEvent(new Event('userLogin'));
     await logoutUser();
   };
 
