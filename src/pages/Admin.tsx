@@ -40,27 +40,43 @@ export default function Admin() {
       });
       setProducts(productsRes);
     } catch(err) {
-      import('../data/mockData').then(mod => setProducts(mod.fallbackProducts));
+      import('../data/mockData').then(mod => setProducts(mod.getFallbackProducts()));
     }
   };
 
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingProductId) {
-      await fetch(`/api/products/${editingProductId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct)
-      });
-      alert("Product updated successfully");
-      setEditingProductId(null);
-    } else {
-      await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct)
-      });
-      alert("Product added successfully");
+    try {
+      if (editingProductId) {
+        const res = await fetch(`/api/products/${editingProductId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProduct)
+        });
+        if (!res.ok) throw new Error();
+        alert("Product updated successfully");
+        setEditingProductId(null);
+      } else {
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProduct)
+        });
+        if (!res.ok) throw new Error();
+        alert("Product added successfully");
+      }
+    } catch (err) {
+      // Fallback
+      if (editingProductId) {
+        const mod = await import('../data/mockData');
+        mod.saveFallbackProduct({ ...newProduct, _id: editingProductId });
+        alert("Product updated successfully (locally)");
+        setEditingProductId(null);
+      } else {
+        const mod = await import('../data/mockData');
+        mod.saveFallbackProduct({ ...newProduct });
+        alert("Product added successfully (locally)");
+      }
     }
     setNewProduct({ title: '', description: '', originalPrice: '', sellingPrice: '', category: '', imageUrl: '', stock: '' });
     fetchData();
@@ -96,9 +112,15 @@ export default function Admin() {
 
   const handleDeleteProduct = async (productId: string) => {
     if(confirm("Are you sure you want to delete this product?")) {
-      await fetch(`/api/products/${productId}`, {
-        method: 'DELETE'
-      });
+      try {
+        const res = await fetch(`/api/products/${productId}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) throw new Error();
+      } catch (err) {
+        const mod = await import('../data/mockData');
+        mod.deleteFallbackProduct(productId);
+      }
       fetchData();
     }
   };

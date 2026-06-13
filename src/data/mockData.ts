@@ -1,4 +1,4 @@
-export const fallbackProducts = [
+const DEFAULT_PRODUCTS = [
   {
     _id: "m_1",
     title: "SAMSUNG Galaxy S24 Ultra 5G",
@@ -50,5 +50,39 @@ export const fallbackProducts = [
     stock: 15
   }
 ];
+
+export const getFallbackProducts = () => {
+  const stored = localStorage.getItem('mock_products');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error('Failed to parse stored products', e);
+    }
+  }
+  return DEFAULT_PRODUCTS;
+};
+
+export const setFallbackProducts = (products: any[]) => {
+  localStorage.setItem('mock_products', JSON.stringify(products));
+};
+
+export const deleteFallbackProduct = (id: string) => {
+  const current = getFallbackProducts();
+  const updated = current.filter((p: any) => p._id !== id);
+  setFallbackProducts(updated);
+};
+
+export const saveFallbackProduct = (product: any) => {
+  const current = getFallbackProducts();
+  const index = current.findIndex((p: any) => p._id === product._id);
+  if (index !== -1) {
+    current[index] = product;
+  } else {
+    product._id = "m_" + Date.now();
+    current.push(product);
+  }
+  setFallbackProducts(current);
+};
 
 export const fallbackOrders = [];

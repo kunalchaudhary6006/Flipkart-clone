@@ -27,7 +27,7 @@ export default function ProductDetails() {
       .catch(err => {
         console.error('Fetch failed, using mock data:', err);
         import('../data/mockData').then(mod => {
-          const prod = mod.fallbackProducts.find(p => p._id === id);
+          const prod = mod.getFallbackProducts().find((p: any) => p._id === id);
           if (prod) {
             setProduct(prod);
           } else {

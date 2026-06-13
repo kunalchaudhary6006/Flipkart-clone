@@ -28,7 +28,7 @@ export default function Home() {
       .catch(err => {
         console.error('Fetch failed, using mock data:', err);
         import('../data/mockData').then(mod => {
-          setProducts(mod.fallbackProducts);
+          setProducts(mod.getFallbackProducts());
           setLoading(false);
         });
       });
