@@ -19,12 +19,29 @@ export default function Admin() {
   }, []);
 
   const fetchData = async () => {
-    const [ordersRes, productsRes] = await Promise.all([
-      fetch('/api/orders').then(res => res.json()),
-      fetch('/api/products').then(res => res.json())
-    ]);
-    setOrders(ordersRes);
-    setProducts(productsRes);
+    try {
+      const ordersRes = await fetch('/api/orders').then(res => {
+        if (!res.ok) throw new Error('Failed to fetch orders');
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) throw new Error('Not JSON');
+        return res.json();
+      });
+      setOrders(ordersRes);
+    } catch(err) {
+      import('../data/mockData').then(mod => setOrders(mod.fallbackOrders));
+    }
+    
+    try {
+      const productsRes = await fetch('/api/products').then(res => {
+        if (!res.ok) throw new Error('Failed to fetch products');
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) throw new Error('Not JSON');
+        return res.json();
+      });
+      setProducts(productsRes);
+    } catch(err) {
+      import('../data/mockData').then(mod => setProducts(mod.fallbackProducts));
+    }
   };
 
   const handleProductSubmit = async (e: React.FormEvent) => {

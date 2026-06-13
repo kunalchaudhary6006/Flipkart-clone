@@ -14,6 +14,10 @@ export default function ProductDetails() {
     fetch(`/api/products/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Product not found');
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new TypeError("Oops, we haven't got JSON!");
+        }
         return res.json();
       })
       .then(data => {
@@ -21,8 +25,16 @@ export default function ProductDetails() {
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
-        setLoading(false);
+        console.error('Fetch failed, using mock data:', err);
+        import('../data/mockData').then(mod => {
+          const prod = mod.fallbackProducts.find(p => p._id === id);
+          if (prod) {
+            setProduct(prod);
+          } else {
+            console.error('Product not found in mock data');
+          }
+          setLoading(false);
+        });
       });
   }, [id]);
 

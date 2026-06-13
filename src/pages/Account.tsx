@@ -24,9 +24,21 @@ export default function Account() {
 
   useEffect(() => {
     fetch('/api/orders')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Network response not ok');
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new TypeError("Oops, we haven't got JSON!");
+        }
+        return res.json();
+      })
       .then(data => setOrders(data))
-      .catch(console.error);
+      .catch(err => {
+        console.error('Fetch failed, using mock data:', err);
+        import('../data/mockData').then(mod => {
+          setOrders(mod.fallbackOrders);
+        });
+      });
       
     const handleStorage = () => {
       setLocalName(localStorage.getItem('user_name') || '');

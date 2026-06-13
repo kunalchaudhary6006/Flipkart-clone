@@ -13,12 +13,25 @@ export default function Home() {
 
   useEffect(() => {
     fetch('/api/products')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new TypeError("Oops, we haven't got JSON!");
+        }
+        return res.json();
+      })
       .then(data => {
         setProducts(data);
         setLoading(false);
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error('Fetch failed, using mock data:', err);
+        import('../data/mockData').then(mod => {
+          setProducts(mod.fallbackProducts);
+          setLoading(false);
+        });
+      });
   }, []);
 
   useEffect(() => {
