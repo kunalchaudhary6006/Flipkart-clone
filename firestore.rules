@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email']) 
+        && data.email is string 
+        && data.email.size() <= 256
+        && (data.keys().hasOnly(['name', 'email', 'phone', 'address', 'createdAt', 'updatedAt']))
+        && (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() <= 128))
+        && (!data.keys().hasAny(['phone']) || (data.phone is string && data.phone.size() <= 20))
+        && (!data.keys().hasAny(['address']) || (data.address is string && data.address.size() <= 500));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId)
+                    && isValidUser(incoming())
+                    && incoming().createdAt == request.time;
+      allow update: if isOwner(userId)
+                    && isValidUser(incoming())
+                    && incoming().updatedAt == request.time
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'address', 'updatedAt']);
+    }
+  }
+}
