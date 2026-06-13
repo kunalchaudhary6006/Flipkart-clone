@@ -36,6 +36,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const handleLocalLogin = () => {
+      const token = localStorage.getItem('user_token');
+      if (token && (!user || token !== user.uid)) {
+        // If there's a token but it's not from Firebase (i.e., Mock OTP)
+        setUserData({
+          name: localStorage.getItem('user_name') || '',
+          email: token.includes('@') ? token : '',
+          phone: localStorage.getItem('user_phone') || token,
+          address: localStorage.getItem('user_address') || ''
+        });
+      }
+    };
+    
+    window.addEventListener('userLogin', handleLocalLogin);
+    // initial check
+    handleLocalLogin();
+    
+    return () => window.removeEventListener('userLogin', handleLocalLogin);
+  }, [user]);
+
+  useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
